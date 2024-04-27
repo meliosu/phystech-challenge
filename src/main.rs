@@ -1,21 +1,20 @@
 use phystech_radar::*;
+use std::env;
 
 fn main() {
-    // let input = std::fs::read_to_string("input.txt").unwrap();
-    // print_matrix_csv(&input);
-    // print_weights_csv(&input);
+    let path = env::args().nth(1).unwrap_or("input.csv".into());
 
-    // println!("{}", 0.99997f32.powi(100000));
+    let input = match std::fs::read_to_string(path) {
+        Ok(string) => string,
+        Err(err) => {
+            eprintln!("error opening file: {err}");
+            return;
+        }
+    };
 
-    // println!("{matrix}");
-    // println!("{weights:?}");
+    let (matrix, weights) = parse_input(&input);
 
-    let input = std::fs::read_to_string("input28.csv").unwrap();
-    let (matrix, weights) = parse_input_csv(&input);
-
-    // println!("{}", weights.iter().sum::<f64>() / weights.len() as f64);
-
-    for (hypot, weight) in search_sa2(&matrix, &weights) {
+    for (hypot, weight) in search(&matrix, &weights) {
         println!("{hypot:?} | {weight:.3}");
     }
 }
