@@ -3,8 +3,8 @@ use rand::{rngs::StdRng, Rng, SeedableRng};
 const SIZE: usize = 28;
 
 pub fn search(matrix: &CompatibilityMatrix, weights: &Vec<f64>) -> Vec<(u64, f64)> {
-    const INITIAL_TEMP: f64 = 100.0;
-    const MULTIPLIER: f64 = 0.999995;
+    const INITIAL_TEMP: f64 = 300.0;
+    const MULTIPLIER: f64 = 0.999975;
 
     let coeff = weights.iter().sum::<f64>() / weights.len() as f64;
 
@@ -21,7 +21,7 @@ pub fn search(matrix: &CompatibilityMatrix, weights: &Vec<f64>) -> Vec<(u64, f64
         masks
     };
 
-    let mut answers: Vec<(u64, f64)> = vec![Default::default(); 5];
+    let mut answers: Vec<(u64, f64)> = vec![Default::default(); 8];
     let mut answer = 0u64;
     let mut weight = 0f64;
     let mut score = 0f64;
@@ -78,11 +78,11 @@ pub fn search(matrix: &CompatibilityMatrix, weights: &Vec<f64>) -> Vec<(u64, f64
 
             answers.push((answer, weight));
             answers.sort_by(|(_, w1), (_, w2)| w2.total_cmp(&w1));
-            answers.resize(5, Default::default());
+            answers.resize(8, Default::default());
         }
     }
 
-    answers
+    answers.into_iter().take(5).collect()
 }
 
 pub fn print_answer(answers: &Vec<(u64, f64)>) {
@@ -90,8 +90,8 @@ pub fn print_answer(answers: &Vec<(u64, f64)>) {
 
     output += ",sum(w)\n";
 
-    for (hypot, weight) in answers {
-        output += "GH,";
+    for (i, (hypot, weight)) in answers.iter().enumerate() {
+        output += &format!("GH{},", i + 1);
 
         for th in 0..SIZE {
             if hypot & (1u64 << th) != 0 {
