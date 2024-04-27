@@ -3,6 +3,84 @@ use std::collections::HashSet;
 
 const SIZE: usize = 28;
 
+pub fn search_sa2(matrix: &CompatibilityMatrix, weights: &Vec<f64>) -> Vec<(Vec<usize>, f64)> {
+    const INITIAL_TEMP: f64 = 100.0;
+    const MAGIC: f64 = 4.0;
+
+    let mut masks: [u64; SIZE] = [0; SIZE];
+
+    for i in 0..SIZE {
+        for j in 0..SIZE {
+            if matrix.matrix[i][j] {
+                masks[i] |= 1u64 << j;
+            }
+        }
+    }
+
+    let mut answers: Vec<(u64, f64)> = vec![Default::default(); 8];
+    let mut answer = 0u64;
+    let mut weight = 0f64;
+    let mut score = 0f64;
+    let mut collisions = 0;
+    let mut temperature = INITIAL_TEMP;
+    let mut rng = rand::rngs::StdRng::from_entropy();
+
+    while temperature > 0.001 {
+        let th = rng.gen_range(0..SIZE);
+        let th_bit = 1u64 << th;
+
+        let mut new_collisions = collisions;
+        let mut new_weight = weight;
+
+        if answer & th_bit != 0 {
+            new_weight -= weights[th];
+            new_collisions -= (answer & !masks[th]).count_ones();
+        } else {
+            new_weight += weights[th];
+            new_collisions += (answer & !masks[th]).count_ones();
+        }
+
+        let new_score = new_weight - new_collisions as f64 * MAGIC;
+
+        if new_score > score || rng.gen::<f64>() < ((new_score - score) / temperature).exp() {
+            if answer & th_bit != 0 {
+                answer &= !th_bit;
+            } else {
+                answer |= th_bit;
+            }
+
+            score = new_score;
+            weight = new_weight;
+            collisions = new_collisions;
+
+            if collisions == 0 {
+                if answers.iter().any(|&(_, w)| w < weight) {
+                    // if answer is not a child
+                    if !answers.iter().any(|(a, _)| answer & a == answer) {
+                        // check if answer is a parent
+                        answers = answers
+                            .into_iter()
+                            .filter(|&(a, _)| a & answer != a)
+                            .collect();
+
+                        answers.push((answer, weight));
+                        answers.sort_by(|(_, w1), (_, w2)| w2.total_cmp(&w1));
+                        answers.resize(8, Default::default());
+                    }
+                }
+            }
+        }
+
+        temperature *= 0.9999975;
+    }
+
+    answers
+        .iter()
+        .take(5)
+        .map(|(a, w)| ((0..SIZE).filter(|th| a & (1u64 << th) != 0).collect(), *w))
+        .collect()
+}
+
 pub fn search_sa(matrix: &CompatibilityMatrix, weights: &Vec<f32>) -> Vec<(HashSet<usize>, f32)> {
     const INITIAL_TEMP: f32 = 100.0;
     const MAGIC: f32 = 3.5;
@@ -102,13 +180,13 @@ pub fn search_recursive(
     (final_answer, final_weight)
 }
 
-pub fn parse_input_csv(input: &str) -> (CompatibilityMatrix, Vec<f32>) {
+pub fn parse_input_csv(input: &str) -> (CompatibilityMatrix, Vec<f64>) {
     let mut matrix = CompatibilityMatrix::default();
     let mut weights = Vec::new();
 
     for (i, line) in input.lines().enumerate() {
         if i == SIZE {
-            weights = line.split(',').map(|n| n.parse::<f32>().unwrap()).collect();
+            weights = line.split(',').map(|n| n.parse::<f64>().unwrap()).collect();
             break;
         }
 

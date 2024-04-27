@@ -13,7 +13,9 @@ fn main() {
     let input = std::fs::read_to_string("input28.csv").unwrap();
     let (matrix, weights) = parse_input_csv(&input);
 
-    for (hypot, weight) in search_sa(&matrix, &weights) {
-        println!("{hypot:?} | {weight}");
+    // println!("{}", weights.iter().sum::<f64>() / weights.len() as f64);
+
+    for (hypot, weight) in search_sa2(&matrix, &weights) {
+        println!("{hypot:?} | {weight:.3}");
     }
 }
