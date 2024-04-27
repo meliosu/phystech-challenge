@@ -4,9 +4,8 @@ use std::collections::HashSet;
 const SIZE: usize = 28;
 
 pub fn search_sa(matrix: &CompatibilityMatrix, weights: &Vec<f32>) -> Vec<(HashSet<usize>, f32)> {
-    const ITERS: usize = 500000;
-    const INITIAL_TEMP: f32 = 1.0;
-    const MAGIC: f32 = 9.0;
+    const INITIAL_TEMP: f32 = 100.0;
+    const MAGIC: f32 = 3.5;
 
     let mut answers: Vec<(HashSet<usize>, f32)> = vec![Default::default(); 5];
 
@@ -14,13 +13,11 @@ pub fn search_sa(matrix: &CompatibilityMatrix, weights: &Vec<f32>) -> Vec<(HashS
     let mut weight = 0f32;
     let mut score = 0f32;
     let mut collisions = 0;
-
-    let mut count = 0;
+    let mut temperature = INITIAL_TEMP;
 
     let mut rng = rand::rngs::StdRng::from_entropy();
 
-    let mut temperature = INITIAL_TEMP;
-    for iter in 0..ITERS {
+    while temperature > 0.001 {
         let th = rng.gen_range(0..SIZE);
 
         let mut new_collisions = collisions;
@@ -47,9 +44,6 @@ pub fn search_sa(matrix: &CompatibilityMatrix, weights: &Vec<f32>) -> Vec<(HashS
         let new_score = new_weight - new_collisions as f32 * MAGIC;
 
         if new_score > score || rng.gen::<f32>() < ((new_score - score) / temperature).exp() {
-            count += 1;
-            println!("{count}");
-
             if answer.contains(&th) {
                 answer.remove(&th);
             } else {
@@ -71,11 +65,7 @@ pub fn search_sa(matrix: &CompatibilityMatrix, weights: &Vec<f32>) -> Vec<(HashS
         }
 
         // 0.99997
-        temperature *= 0.999996;
-
-        if iter == ITERS - 1 {
-            println!("{temperature}");
-        }
+        temperature *= 0.99975;
     }
 
     answers
