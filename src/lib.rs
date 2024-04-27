@@ -104,13 +104,9 @@ pub fn print_answer(answers: &Vec<(u64, f64)>) {
         output += &format!("{weight:.4}\n");
     }
 
-    match std::fs::write("out.csv", output) {
-        Err(err) => {
-            eprintln!("error writing to out.csv: {err}");
-        }
-
-        Ok(_) => {}
-    }
+    std::fs::write("out.csv", output).unwrap_or_else(|err| {
+        eprintln!("error writing to out.csv: {err}");
+    });
 }
 
 pub fn parse_input(input: &str) -> (CompatibilityMatrix, Vec<f64>) {
