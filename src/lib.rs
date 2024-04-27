@@ -59,15 +59,10 @@ pub fn search(matrix: &CompatibilityMatrix, weights: &Vec<f64>) -> Vec<(u64, f64
             weight = new_weight;
             collisions = new_collisions;
 
-            if collisions != 0 {
-                continue;
-            }
-
-            if !answers.iter().any(|&(_, w)| w < weight) {
-                continue;
-            }
-
-            if answers.iter().any(|&(a, _)| answer & a == answer) {
+            if collisions != 0
+                || answers.iter().all(|&(_, w)| w > weight)
+                || answers.iter().any(|&(a, _)| answer & a == answer)
+            {
                 continue;
             }
 
